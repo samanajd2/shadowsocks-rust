@@ -24,10 +24,10 @@ full = [
     "local-tunnel",
     "local-socks4",
     "local-dns",
-	"dns-over-tls",
-	"dns-over-https",
-	"stream-cipher",
-	"security-replay-attack-detect",	
+    "dns-over-tls",
+    "dns-over-https",
+    "stream-cipher",
+    "security-replay-attack-detect",	
 ]
 
 # Enable local server
