@@ -63,6 +63,11 @@ default = [
     "local-socks4",
     "multi-threaded",
     "aead-cipher-2022",
+    "local-dns",
+	"dns-over-tls",
+	"dns-over-https",
+	"stream-cipher",
+	"security-replay-attack-detect",	
 ]
 
 # Enable local server
