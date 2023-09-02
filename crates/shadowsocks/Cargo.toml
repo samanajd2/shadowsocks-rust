@@ -14,7 +14,7 @@ edition = "2021"
 maintenance = { status = "passively-maintained" }
 
 [features]
-default = ["trust-dns"]
+default = ["trust-dns", "stream-cipher", "security-replay-attack-detect"]
 
 # Uses trust-dns instead of tokio's builtin DNS resolver
 trust-dns = ["trust-dns-resolver", "arc-swap", "notify"]
