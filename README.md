@@ -557,9 +557,6 @@ These Ciphers require `"password"` to be a Base64 string of key that have **exac
 
 - `plain` or `none` (No encryption, only used for debugging or with plugins that ensure transport security)
 
-<details><summary>Deprecated</summary>
-<p>
-
 - `table`
 - `aes-128-cfb`, `aes-128-cfb1`, `aes-128-cfb8`, `aes-128-cfb128`
 - `aes-192-cfb`, `aes-192-cfb1`, `aes-192-cfb8`, `aes-192-cfb128`
@@ -573,8 +570,6 @@ These Ciphers require `"password"` to be a Base64 string of key that have **exac
 - `rc4-md5`
 - `chacha20-ietf`
 
-</p>
-</details>
 
 ## ACL
 
