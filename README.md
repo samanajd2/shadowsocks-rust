@@ -8,19 +8,6 @@ Use cargo to build. NOTE: **RAM >= 2GiB**
 ```bash
 cargo build --release
 ```
-
-Then `sslocal` and `ssserver` will appear in `./target/(debug|release)/`, it works similarly as the two binaries in the official ShadowSocks' implementation.
-
-```bash
-make install TARGET=release
-```
-
-Then `sslocal`, `ssserver`, `ssmanager` and `ssurl` will be installed to `/usr/local/bin` (variable PREFIX).
-
-For Windows users, if you have encountered any problem in building, check and discuss in [#102](https://github.com/shadowsocks/shadowsocks-rust/issues/102).
-
-```
-
 ## For more details see official [shadowsocks-Rust readme](https://github.com/shadowsocks/shadowsocks-rust/blob/master/README.md).
 
 
