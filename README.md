@@ -13,14 +13,11 @@ cargo build --release
 1. Stream Ciphers Enabled (by default)
 
 - `plain` or `none` (No encryption, only used for debugging or with plugins that ensure transport security)
-
 - `table`
 - `aes-128-cfb`, `aes-128-cfb1`, `aes-128-cfb8`, `aes-128-cfb128`
 - `aes-192-cfb`, `aes-192-cfb1`, `aes-192-cfb8`, `aes-192-cfb128`
 - `aes-256-cfb`, `aes-256-cfb1`, `aes-256-cfb8`, `aes-256-cfb128`
-- `aes-128-ctr`
-- `aes-192-ctr`
-- `aes-256-ctr`
+- `aes-128-ctr`, `aes-192-ctr`, `aes-256-ctr`
 - `camellia-128-cfb`, `camellia-128-cfb1`, `camellia-128-cfb8`, `camellia-128-cfb128`
 - `camellia-192-cfb`, `camellia-192-cfb1`, `camellia-192-cfb8`, `camellia-192-cfb128`
 - `camellia-256-cfb`, `camellia-256-cfb1`, `camellia-256-cfb8`, `camellia-256-cfb128`
@@ -28,14 +25,12 @@ cargo build --release
 - `chacha20-ietf`
 
 2. AEAD 2022 Ciphers
-
 - `2022-blake3-aes-128-gcm`, `2022-blake3-aes-256-gcm`
 - `2022-blake3-chacha20-poly1305`, `2022-blake3-chacha8-poly1305`
 
 These Ciphers require `"password"` to be a Base64 string of key that have **exactly the same length** of Cipher's Key Size. It is recommended to use `ssservice genkey -m "METHOD_NAME"` to generate a secured and safe key.
 
 3. AEAD Ciphers
-
 - `chacha20-ietf-poly1305`
 - `aes-128-gcm`, `aes-256-gcm`
 
@@ -66,7 +61,8 @@ ssserver -c config.json
 
 
 ## GUI Shadowsocks-Rust
-Or You can use [Shadowsocks-GUI-Rust](https://github.com/samanajd2/shadowsocks-gui-rust) Instead.
+You can use [Shadowsocks-GUI-Rust](https://github.com/samanajd2/shadowsocks-gui-rust) Instead.
+It is simple to use.
 
 
 ## License
