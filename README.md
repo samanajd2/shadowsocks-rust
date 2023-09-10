@@ -43,12 +43,6 @@ These Ciphers require `"password"` to be a Base64 string of key that have **exac
 - `aes-128-gcm`, `aes-256-gcm`
 
 
-Generate a safe and secured password for a specific encryption method (`aes-128-gcm` in the example) with:
-
-```bash
-ssservice genkey -m "aes-128-gcm"
-```
-
 Create a ShadowSocks' configuration file. Example
 
 ```jsonc
@@ -64,49 +58,15 @@ Create a ShadowSocks' configuration file. Example
 }
 ```
 
-Detailed explanation could be found in [shadowsocks' documentation](https://github.com/shadowsocks/shadowsocks/wiki).
-
-In shadowsocks-rust, we also have an extended configuration file format, which is able to define more than one server. You can also disable individual servers.
-
-```jsonc
-{
-    "servers": [
-        {
-            "server": "127.0.0.1",
-            "server_port": 8388,
-            "password": "rwQc8qPXVsRpGx3uW+Y3Lj4Y42yF9Bs0xg1pmx8/+bo=",
-            "method": "aes-256-gcm",
-            "timeout": 7200
-        },
-        {
-            "server": "127.0.0.1",
-            "server_port": 8389,
-            "password": "/dliNXn5V4jg6vBW4MnC1I8Jljg9x7vSihmk6UZpRBM=",
-            "method": "chacha20-ietf-poly1305"
-        },
-        {
-            "disabled": true,
-            "server": "eg.disable.me",
-            "server_port": 8390,
-            "password": "mGvbWWay8ueP9IHnV5F1uWGN2BRToiVCAWJmWOTLU24=",
-            "method": "chacha20-ietf-poly1305"
-        }
-    ],
-    // ONLY FOR `sslocal`
-    // Delete these lines if you are running `ssserver` or `ssmanager`
-    "local_port": 1080,
-    "local_address": "127.0.0.1"
-}
-```
-
-`sslocal` automatically selects the best server with the lowest latency and the highest availability.
-
 Start Shadowsocks client and server with:
 
 ```bash
 sslocal -c config.json
 ssserver -c config.json
 ```
+
+Or You can use [Shadowsocks-GUI-Rust](https://github.com/samanajd2/shadowsocks-gui-rust) Instead
+
 
 ## Configuration
 
