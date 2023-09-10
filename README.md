@@ -553,7 +553,7 @@ These Ciphers require `"password"` to be a Base64 string of key that have **exac
 - `chacha20-ietf-poly1305`
 - `aes-128-gcm`, `aes-256-gcm`
 
-### Stream Ciphers
+### Stream Ciphers Enabled (in this fork by default)
 
 - `plain` or `none` (No encryption, only used for debugging or with plugins that ensure transport security)
 
