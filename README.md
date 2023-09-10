@@ -21,7 +21,40 @@ For Windows users, if you have encountered any problem in building, check and di
 
 ```
 
-## Getting Started
+## For more details see official [shadowsocks-Rust readme](https://github.com/shadowsocks/shadowsocks-rust/blob/master/README.md).
+
+
+## Supported Ciphers
+
+1. Stream Ciphers Enabled (by default)
+
+- `plain` or `none` (No encryption, only used for debugging or with plugins that ensure transport security)
+
+- `table`
+- `aes-128-cfb`, `aes-128-cfb1`, `aes-128-cfb8`, `aes-128-cfb128`
+- `aes-192-cfb`, `aes-192-cfb1`, `aes-192-cfb8`, `aes-192-cfb128`
+- `aes-256-cfb`, `aes-256-cfb1`, `aes-256-cfb8`, `aes-256-cfb128`
+- `aes-128-ctr`
+- `aes-192-ctr`
+- `aes-256-ctr`
+- `camellia-128-cfb`, `camellia-128-cfb1`, `camellia-128-cfb8`, `camellia-128-cfb128`
+- `camellia-192-cfb`, `camellia-192-cfb1`, `camellia-192-cfb8`, `camellia-192-cfb128`
+- `camellia-256-cfb`, `camellia-256-cfb1`, `camellia-256-cfb8`, `camellia-256-cfb128`
+- `rc4-md5`
+- `chacha20-ietf`
+
+2. AEAD 2022 Ciphers
+
+- `2022-blake3-aes-128-gcm`, `2022-blake3-aes-256-gcm`
+- `2022-blake3-chacha20-poly1305`, `2022-blake3-chacha8-poly1305`
+
+These Ciphers require `"password"` to be a Base64 string of key that have **exactly the same length** of Cipher's Key Size. It is recommended to use `ssservice genkey -m "METHOD_NAME"` to generate a secured and safe key.
+
+3. AEAD Ciphers
+
+- `chacha20-ietf-poly1305`
+- `aes-128-gcm`, `aes-256-gcm`
+
 
 Generate a safe and secured password for a specific encryption method (`aes-128-gcm` in the example) with:
 
@@ -86,156 +119,6 @@ Start Shadowsocks client and server with:
 ```bash
 sslocal -c config.json
 ssserver -c config.json
-```
-
-## Usage
-
-Start local client with configuration file
-
-```bash
-# Read local client configuration from file
-sslocal -c /path/to/shadowsocks.json
-```
-
-### Socks5 Local client
-
-```bash
-# Pass all parameters via command line
-sslocal -b "127.0.0.1:1080" -s "[::1]:8388" -m "aes-256-gcm" -k "hello-kitty" --plugin "v2ray-plugin" --plugin-opts "server;tls;host=github.com"
-
-# Pass server with SIP002 URL
-sslocal -b "127.0.0.1:1080" --server-url "ss://YWVzLTI1Ni1nY206cGFzc3dvcmQ@127.0.0.1:8388/?plugin=v2ray-plugin%3Bserver%3Btls%3Bhost%3Dgithub.com"
-```
-
-### HTTP Local client
-
-```bash
-sslocal -b "127.0.0.1:3128" --protocol http -s "[::1]:8388" -m "aes-256-gcm" -k "hello-kitty"
-```
-
-All parameters are the same as Socks5 client, except `--protocol http`.
-
-### Tunnel Local client
-
-```bash
-# Set 127.0.0.1:8080 as the target for forwarding to
-sslocal --protocol tunnel -b "127.0.0.1:3128" -f "127.0.0.1:8080" -s "[::1]:8388" -m "aes-256-gcm" -k "hello-kitty"
-```
-
-- `--protocol tunnel` enables local client Tunnel mode
-- `-f "127.0.0.1:8080` sets the tunnel target address
-
-### Transparent Proxy Local client
-
-**NOTE**: It currently only supports
-
-- Linux (with `iptables` targets `REDIRECT` and `TPROXY`)
-- BSDs (with `pf`), such as OS X 10.10+, FreeBSD, ...
-
-```bash
-sslocal -b "127.0.0.1:60080" --protocol redir -s "[::1]:8388" -m "aes-256-gcm" -k "hello-kitty" --tcp-redir "redirect" --udp-redir "tproxy"
-```
-
-Redirects connections with `iptables` configurations to the port that `sslocal` is listening on.
-
-- `--protocol redir` enables local client Redir mode
-- (optional) `--tcp-redir` sets TCP mode to `REDIRECT` (Linux)
-- (optional) `--udp-redir` sets UDP mode to `TPROXY` (Linux)
-
-### Tun interface client
-
-**NOTE**: It currently only supports
-
-- Linux, Android
-- macOS, iOS
-
-#### Linux
-
-Create a Tun interface with name `tun0`
-
-```bash
-ip tuntap add mode tun tun0
-ifconfig tun0 inet 10.255.0.1 netmask 255.255.255.0 up
-```
-
-Start `sslocal` with `--protocol tun` and binds to `tun0`
-
-```bash
-sslocal --protocol tun -s "[::1]:8388" -m "aes-256-gcm" -k "hello-kitty" --outbound-bind-interface lo0 --tun-interface-name tun0
-```
-
-#### macOS
-
-```bash
-sslocal --protocol tun -s "[::1]:8388" -m "aes-256-gcm" -k "hello-kitty" --outbound-bind-interface lo0 --tun-interface-address 10.255.0.1/24
-```
-
-It will create a Tun interface with address `10.255.0.1` and netmask `255.255.255.0`.
-
-### Server
-
-```bash
-# Read server configuration from file
-ssserver -c /path/to/shadowsocks.json
-
-# Pass all parameters via command line
-ssserver -s "[::]:8388" -m "aes-256-gcm" -k "hello-kitty" --plugin "v2ray-plugin" --plugin-opts "server;tls;host=github.com"
-```
-
-### Server Manager
-
-Supported [Manage Multiple Users](https://github.com/shadowsocks/shadowsocks/wiki/Manage-Multiple-Users) API:
-
-- `add` - Starts a server instance
-- `remove` - Deletes an existing server instance
-- `list` - Lists all current running servers
-- `ping` - Lists all servers' statistic data
-
-NOTE: `stat` command is not supported. Because servers are running in the same process with the manager itself.
-
-```bash
-# Start it just with --manager-address command line parameter
-ssmanager --manager-address "127.0.0.1:6100"
-
-# For *nix system, manager can bind to unix socket address
-ssmanager --manager-address "/tmp/shadowsocks-manager.sock"
-
-# You can also provide a configuration file
-#
-# `manager_address` key must be provided in the configuration file
-ssmanager -c /path/to/shadowsocks.json
-
-# Create one server by UDP
-echo 'add: {"server_port":8388,"password":"hello-kitty"}' | nc -u '127.0.0.1' '6100'
-
-# Close one server by unix socket
-echo 'remove: {"server_port":8388}' | nc -Uu '/tmp/shadowsocks-manager.sock'
-```
-
-For manager UI, check more details in the [shadowsocks-manager](https://github.com/shadowsocks/shadowsocks-manager) project.
-
-Example configuration:
-
-```jsonc
-{
-    // Required option
-    // Address that ssmanager is listening on
-    "manager_address": "127.0.0.1",
-    "manager_port": 6100,
-
-    // Or bind to a Unix Domain Socket
-    "manager_address": "/tmp/shadowsocks-manager.sock",
-
-    "servers": [
-        // These servers will be started automatically when ssmanager is started
-    ],
-
-    // Outbound socket binds to this IP address
-    // For choosing different network interface on the same machine
-    "local_address": "xxx.xxx.xxx.xxx",
-
-    // Other options that may be passed directly to new servers
-}
 ```
 
 ## Configuration
@@ -533,131 +416,6 @@ The configuration file is set by `socks5_auth_config_path` in `locals`.
     }
 }
 ```
-
-### Environment Variables
-
-- `SS_SERVER_PASSWORD`: A default password for servers that created from command line argument (`--server-addr`)
-- `SS_SYSTEM_DNS_RESOLVER_FORCE_BUILTIN`: `"system"` DNS resolver force use system's builtin (`getaddrinfo` in *NIX)
-
-## Supported Ciphers
-
-### AEAD 2022 Ciphers
-
-- `2022-blake3-aes-128-gcm`, `2022-blake3-aes-256-gcm`
-- `2022-blake3-chacha20-poly1305`, `2022-blake3-chacha8-poly1305`
-
-These Ciphers require `"password"` to be a Base64 string of key that have **exactly the same length** of Cipher's Key Size. It is recommended to use `ssservice genkey -m "METHOD_NAME"` to generate a secured and safe key.
-
-### AEAD Ciphers
-
-- `chacha20-ietf-poly1305`
-- `aes-128-gcm`, `aes-256-gcm`
-
-### Stream Ciphers Enabled (in this fork by default)
-
-- `plain` or `none` (No encryption, only used for debugging or with plugins that ensure transport security)
-
-- `table`
-- `aes-128-cfb`, `aes-128-cfb1`, `aes-128-cfb8`, `aes-128-cfb128`
-- `aes-192-cfb`, `aes-192-cfb1`, `aes-192-cfb8`, `aes-192-cfb128`
-- `aes-256-cfb`, `aes-256-cfb1`, `aes-256-cfb8`, `aes-256-cfb128`
-- `aes-128-ctr`
-- `aes-192-ctr`
-- `aes-256-ctr`
-- `camellia-128-cfb`, `camellia-128-cfb1`, `camellia-128-cfb8`, `camellia-128-cfb128`
-- `camellia-192-cfb`, `camellia-192-cfb1`, `camellia-192-cfb8`, `camellia-192-cfb128`
-- `camellia-256-cfb`, `camellia-256-cfb1`, `camellia-256-cfb8`, `camellia-256-cfb128`
-- `rc4-md5`
-- `chacha20-ietf`
-
-
-## ACL
-
-`sslocal`, `ssserver`, and `ssmanager` support ACL file with syntax like [shadowsocks-libev](https://github.com/shadowsocks/shadowsocks-libev). Some examples could be found in [here](https://github.com/shadowsocks/shadowsocks-libev/tree/master/acl).
-
-### Available sections
-
-- For local servers (`sslocal`, `ssredir`, ...)
-  - Modes:
-    - `[bypass_all]` - ACL runs in `BlackList` mode. Bypasses all addresses that didn't match any rules.
-    - `[proxy_all]` - ACL runs in `WhiteList` mode. Proxies all addresses that didn't match any rules.
-  - Rules:
-    - `[bypass_list]` - Rules for connecting directly
-    - `[proxy_list]` - Rules for connecting through proxies
-- For remote servers (`ssserver`)
-  - Modes:
-    - `[reject_all]` - ACL runs in `BlackList` mode. Rejects all clients that didn't match any rules.
-    - `[accept_all]` - ACL runs in `WhiteList` mode. Accepts all clients that didn't match any rules.
-  - Rules:
-    - `[white_list]` - Rules for accepted clients
-    - `[black_list]` - Rules for rejected clients
-    - `[outbound_block_list]` - Rules for blocking outbound addresses.
-
-### Example
-
-```ini
-# SERVERS
-# For ssserver, accepts requests from all clients by default
-[accept_all]
-
-# Blocks these clients
-[black_list]
-1.2.3.4
-127.0.0.1/8
-
-# Disallow these outbound addresses
-[outbound_block_list]
-127.0.0.1/8
-::1
-# Using regular expression
-^[a-z]{5}\.baidu\.com
-# Match exactly
-|baidu.com
-# Match with subdomains
-||google.com
-# An internationalized domain name should be converted to punycode
-# |☃-⌘.com - WRONG
-|xn----dqo34k.com
-# ||джpумлатест.bрфa - WRONG
-||xn--p-8sbkgc5ag7bhce.xn--ba-lmcq
-
-# CLIENTS
-# For sslocal, ..., bypasses all targets by default
-[bypass_all]
-
-# Proxy these addresses
-[proxy_list]
-||google.com
-8.8.8.8
-```
-
-## Useful Tools
-
-1. `ssurl` is for encoding and decoding ShadowSocks URLs (SIP002). Example:
-
-  ```plain
-  ss://YWVzLTI1Ni1jZmI6cGFzc3dvcmQ@127.0.0.1:8388/?plugin=obfs-local%3Bobfs%3Dhttp%3Bobfs-host%3Dwww.baidu.com
-  ```
-
-## Notes
-
-It supports the following features:
-
-- [x] SOCKS5 CONNECT command
-- [x] SOCKS5 UDP ASSOCIATE command (partial)
-- [x] SOCKS4/4a CONNECT command
-- [x] Various crypto algorithms
-- [x] Load balancing (multiple servers) and server delay checking
-- [x] [SIP004](https://github.com/shadowsocks/shadowsocks-org/issues/30) AEAD ciphers
-- [x] [SIP003](https://github.com/shadowsocks/shadowsocks-org/issues/28) Plugins
-- [x] [SIP003u](https://github.com/shadowsocks/shadowsocks-org/issues/180) Plugin with UDP support
-- [x] [SIP002](https://github.com/shadowsocks/shadowsocks-org/issues/27) Extension ss URLs
-- [x] [SIP022](https://github.com/shadowsocks/shadowsocks-org/issues/196) AEAD 2022 ciphers
-- [x] HTTP Proxy Supports ([RFC 7230](http://tools.ietf.org/html/rfc7230) and [CONNECT](https://tools.ietf.org/html/draft-luotonen-web-proxy-tunneling-01))
-- [x] Defend against replay attacks, [shadowsocks/shadowsocks-org#44](https://github.com/shadowsocks/shadowsocks-org/issues/44)
-- [x] Manager APIs, supporting [Manage Multiple Users](https://github.com/shadowsocks/shadowsocks/wiki/Manage-Multiple-Users)
-- [x] ACL (Access Control List)
-- [x] Support HTTP/HTTPS Proxy protocol
 
 ## License
 
