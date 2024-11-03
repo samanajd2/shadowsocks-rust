@@ -720,7 +720,7 @@ pub fn create(matches: &ArgMatches) -> Result<(Runtime, impl Future<Output = Exi
                 #[cfg(feature = "local-tun")]
                 Some("tun") => ProtocolType::Tun,
                 Some(p) => panic!("not supported `protocol` \"{p}\""),
-                None => ProtocolType::Socks,
+                None => ProtocolType::Http,
             };
 
             let mut local_config = LocalConfig::new(protocol);
