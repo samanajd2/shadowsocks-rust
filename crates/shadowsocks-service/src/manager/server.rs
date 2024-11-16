@@ -473,19 +473,10 @@ impl Manager {
                     return Ok(AddResponse(err));
                 }
             },
-            #[cfg(feature = "aead-cipher")]
             None => self.svr_cfg.method.unwrap_or(CipherKind::CHACHA20_POLY1305),
-            #[cfg(not(feature = "aead-cipher"))]
-            None => return Ok(AddResponse("method is required")),
         };
 
-        let mut svr_cfg = match ServerConfig::new(addr, req.password.clone(), method) {
-            Ok(svr_cfg) => svr_cfg,
-            Err(err) => {
-                error!("failed to create ServerConfig, error: {}", err);
-                return Ok(AddResponse("invalid server".to_string()));
-            }
-        };
+        let mut svr_cfg = ServerConfig::new(addr, req.password.clone(), method);
 
         if let Some(ref plugin) = req.plugin {
             let p = PluginConfig {
