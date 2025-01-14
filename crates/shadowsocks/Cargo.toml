@@ -15,7 +15,7 @@ rust-version = "1.77"
 maintenance = { status = "passively-maintained" }
 
 [features]
-default = ["hickory-dns", "aead-cipher"]
+default = ["hickory-dns", "aead-cipher", "stream-cipher", "security-replay-attack-detect"]
 
 # Uses Hickory-DNS instead of tokio's builtin DNS resolver
 hickory-dns = ["hickory-resolver", "arc-swap", "notify"]
