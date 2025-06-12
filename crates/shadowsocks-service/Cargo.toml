@@ -15,7 +15,7 @@ rust-version = "1.85"
 maintenance = { status = "passively-maintained" }
 
 [features]
-default = ["hickory-dns", "aead-cipher", "stream-cipher", "security-replay-attack-detect"]
+default = ["hickory-dns", "aead-cipher", "aead-cipher-2022", "stream-cipher", "security-replay-attack-detect"]
 
 full = [
     "local",
