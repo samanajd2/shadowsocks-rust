@@ -14,7 +14,7 @@ env:
   CARGO_TERM_COLOR: always
 
 jobs:
-  build-cross:
+  build-release-cross:
     runs-on: ubuntu-latest
     env:
       RUST_BACKTRACE: full
@@ -70,8 +70,30 @@ jobs:
           #           mips64el-linux-muslsf-gcc: error: crtn.o: No such file or directory
           # - target: mips64el-unknown-linux-muslabi64
           #   toolchain: nightly
+          - target: x86_64-unknown-freebsd
+            toolchain: stable
+          - target: x86_64-unknown-netbsd
+            toolchain: stable
+          - target: loongarch64-unknown-linux-gnu
+            toolchain: stable
+          - target: loongarch64-unknown-linux-musl
+            toolchain: stable
+          - target: riscv64gc-unknown-linux-gnu
+            toolchain: stable
+          - target: riscv64gc-unknown-linux-musl
+            toolchain: stable
+          - target: aarch64-linux-android
+            toolchain: stable
+          - target: x86_64-linux-android
+            toolchain: stable
 
     steps:
+      - name: Free Disk Space (Ubuntu)
+        uses: jlumbroso/free-disk-space@main
+
+      - name: Install LLVM and Clang
+        run: sudo apt update && sudo apt install -y clang
+
       - uses: actions/checkout@v4
 
       - name: Install Rust
@@ -82,7 +104,7 @@ jobs:
           rustup override set ${{ matrix.platform.toolchain }}
 
       - name: Install cross
-        run: cargo install cross
+        run: cargo install cross --git https://github.com/cross-rs/cross
 
       - name: Build ${{ matrix.platform.target }}
         timeout-minutes: 120
@@ -102,11 +124,11 @@ jobs:
             fi
 
             compile_nightly="-n"
-            compile_features="-Z build-std=std,panic_abort,proc_macro"
+            #compile_cargo_flags="-Z build-std=std,panic_abort,proc_macro"
           fi
 
           cd build
-          ./build-release -t ${{ matrix.platform.target }} $compile_features $compile_compress $compile_nightly $compile_features
+          ./build-release -t ${{ matrix.platform.target }} $compile_features $compile_compress $compile_nightly $compile_cargo_flags
 
       - name: Upload Github Assets
         uses: softprops/action-gh-release@v2
@@ -117,7 +139,7 @@ jobs:
           prerelease: ${{ contains(github.ref_name, '-') }}
           tag_name: ${{ inputs.tag || github.ref_name }}
 
-  build-unix:
+  build-release-unix:
     runs-on: ${{ matrix.os }}
     env:
       BUILD_EXTRA_FEATURES: "full"
@@ -162,7 +184,7 @@ jobs:
           prerelease: ${{ contains(github.ref_name, '-') }}
           tag_name: ${{ inputs.tag || github.ref_name }}
 
-  build-windows:
+  build-release-windows:
     runs-on: windows-latest
     env:
       RUSTFLAGS: "-C target-feature=+crt-static"

@@ -6,7 +6,7 @@ use std::{
 };
 
 use log::warn;
-use shadowsocks::net::{is_dual_stack_addr, set_tcp_fastopen, AcceptOpts};
+use shadowsocks::net::{AcceptOpts, is_dual_stack_addr, set_tcp_fastopen};
 use socket2::SockAddr;
 use tokio::net::{TcpListener, TcpSocket, TcpStream};
 
@@ -19,7 +19,7 @@ use crate::{
 };
 
 impl TcpListenerRedirExt for TcpListener {
-    async fn bind_redir(ty: RedirType, addr: SocketAddr, accept_opts: AcceptOpts) -> io::Result<TcpListener> {
+    async fn bind_redir(ty: RedirType, addr: SocketAddr, accept_opts: AcceptOpts) -> io::Result<Self> {
         match ty {
             RedirType::Redirect => {
                 // REDIRECT rule doesn't need to set IP_TRANSPARENT

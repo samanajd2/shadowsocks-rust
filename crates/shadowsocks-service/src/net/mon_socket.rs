@@ -3,11 +3,11 @@
 use std::{io, net::SocketAddr, sync::Arc};
 
 use shadowsocks::{
+    ProxySocket,
     relay::{
         socks5::Address,
-        udprelay::{options::UdpSocketControlData, DatagramReceive, DatagramSend},
+        udprelay::{DatagramReceive, DatagramSend, options::UdpSocketControlData},
     },
-    ProxySocket,
 };
 
 use super::flow::FlowStat;
@@ -20,8 +20,8 @@ pub struct MonProxySocket<S> {
 
 impl<S> MonProxySocket<S> {
     /// Create a new socket with flow monitor
-    pub fn from_socket(socket: ProxySocket<S>, flow_stat: Arc<FlowStat>) -> MonProxySocket<S> {
-        MonProxySocket { socket, flow_stat }
+    pub fn from_socket(socket: ProxySocket<S>, flow_stat: Arc<FlowStat>) -> Self {
+        Self { socket, flow_stat }
     }
 
     /// Get the underlying `ProxySocket<S>` immutable reference

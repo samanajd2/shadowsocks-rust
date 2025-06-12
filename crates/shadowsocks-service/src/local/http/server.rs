@@ -29,9 +29,9 @@ pub struct HttpBuilder {
 
 impl HttpBuilder {
     /// Create a new HTTP Local server builder
-    pub fn new(client_config: ServerAddr, balancer: PingBalancer) -> HttpBuilder {
+    pub fn new(client_config: ServerAddr, balancer: PingBalancer) -> Self {
         let context = ServiceContext::new();
-        HttpBuilder::with_context(Arc::new(context), client_config, balancer)
+        Self::with_context(Arc::new(context), client_config, balancer)
     }
 
     /// Create with an existed context
@@ -39,8 +39,8 @@ impl HttpBuilder {
         context: Arc<ServiceContext>,
         client_config: ServerAddr,
         balancer: PingBalancer,
-    ) -> HttpBuilder {
-        HttpBuilder {
+    ) -> Self {
+        Self {
             context,
             client_config,
             balancer,
@@ -58,15 +58,17 @@ impl HttpBuilder {
     pub async fn build(self) -> io::Result<Http> {
         cfg_if::cfg_if! {
             if #[cfg(target_os = "macos")] {
-                let listener = if let Some(launchd_socket_name) = self.launchd_tcp_socket_name {
-                    use tokio::net::TcpListener as TokioTcpListener;
-                    use crate::net::launch_activate_socket::get_launch_activate_tcp_listener;
+                let listener = match self.launchd_tcp_socket_name {
+                    Some(launchd_socket_name) => {
+                        use tokio::net::TcpListener as TokioTcpListener;
+                        use crate::net::launch_activate_socket::get_launch_activate_tcp_listener;
 
-                    let std_listener = get_launch_activate_tcp_listener(&launchd_socket_name, true)?;
-                    let tokio_listener = TokioTcpListener::from_std(std_listener)?;
-                    TcpListener::from_listener(tokio_listener, self.context.accept_opts())?
-                } else {
-                    create_standard_tcp_listener(&self.context, &self.client_config).await?
+                        let std_listener = get_launch_activate_tcp_listener(&launchd_socket_name, true)?;
+                        let tokio_listener = TokioTcpListener::from_std(std_listener)?;
+                        TcpListener::from_listener(tokio_listener, self.context.accept_opts())?
+                    } _ => {
+                        create_standard_tcp_listener(&self.context, &self.client_config).await?
+                    }
                 };
             } else {
                 let listener = create_standard_tcp_listener(&self.context, &self.client_config).await?;
@@ -141,8 +143,8 @@ pub struct HttpConnectionHandler {
 
 impl HttpConnectionHandler {
     /// Create a new Handler
-    pub fn new(context: Arc<ServiceContext>, balancer: PingBalancer) -> HttpConnectionHandler {
-        HttpConnectionHandler {
+    pub fn new(context: Arc<ServiceContext>, balancer: PingBalancer) -> Self {
+        Self {
             context,
             balancer,
             http_client: HttpClient::new(),
@@ -154,7 +156,7 @@ impl HttpConnectionHandler {
     where
         S: AsyncRead + AsyncWrite + Unpin + Send + 'static,
     {
-        let HttpConnectionHandler {
+        let Self {
             context,
             balancer,
             http_client,

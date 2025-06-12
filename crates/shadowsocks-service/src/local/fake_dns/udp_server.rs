@@ -2,9 +2,9 @@
 
 use std::{io, net::SocketAddr, sync::Arc, time::Duration};
 
-use hickory_resolver::proto::op::{response_code::ResponseCode, Message};
+use hickory_resolver::proto::op::{Message, response_code::ResponseCode};
 use log::error;
-use shadowsocks::{lookup_then, net::UdpSocket as ShadowUdpSocket, ServerAddr};
+use shadowsocks::{ServerAddr, lookup_then, net::UdpSocket as ShadowUdpSocket};
 use tokio::time;
 
 use crate::local::context::ServiceContext;
@@ -22,7 +22,7 @@ impl FakeDnsUdpServer {
         context: Arc<ServiceContext>,
         client_config: &ServerAddr,
         manager: Arc<FakeDnsManager>,
-    ) -> io::Result<FakeDnsUdpServer> {
+    ) -> io::Result<Self> {
         let listener = match *client_config {
             ServerAddr::SocketAddr(ref saddr) => {
                 ShadowUdpSocket::listen_with_opts(saddr, context.accept_opts()).await?
@@ -35,7 +35,7 @@ impl FakeDnsUdpServer {
             }
         };
 
-        Ok(FakeDnsUdpServer { listener, manager })
+        Ok(Self { listener, manager })
     }
 
     /// Get UDP local address

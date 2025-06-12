@@ -19,15 +19,14 @@ use tokio::{
     net::{TcpListener as TokioTcpListener, TcpStream as TokioTcpStream},
 };
 
-use crate::{context::Context, relay::socks5::Address, ServerAddr};
+use crate::{ServerAddr, context::Context, relay::socks5::Address};
 
 use super::{
-    is_dual_stack_addr,
+    AcceptOpts, ConnectOpts, is_dual_stack_addr,
     sys::{
-        create_inbound_tcp_socket, set_common_sockopt_after_accept, set_tcp_fastopen, socket_bind_dual_stack,
-        TcpStream as SysTcpStream,
+        TcpStream as SysTcpStream, create_inbound_tcp_socket, set_common_sockopt_after_accept, set_tcp_fastopen,
+        socket_bind_dual_stack,
     },
-    AcceptOpts, ConnectOpts,
 };
 
 /// TcpStream for outbound connections
@@ -36,7 +35,7 @@ pub struct TcpStream(#[pin] SysTcpStream);
 
 impl TcpStream {
     /// Connects to address
-    pub async fn connect_with_opts(addr: &SocketAddr, opts: &ConnectOpts) -> io::Result<TcpStream> {
+    pub async fn connect_with_opts(addr: &SocketAddr, opts: &ConnectOpts) -> io::Result<Self> {
         // tcp_stream_connect(addr, opts).await.map(TcpStream)
         SysTcpStream::connect(*addr, opts).await.map(TcpStream)
     }
@@ -46,7 +45,7 @@ impl TcpStream {
         context: &Context,
         addr: &ServerAddr,
         opts: &ConnectOpts,
-    ) -> io::Result<TcpStream> {
+    ) -> io::Result<Self> {
         let stream = match *addr {
             ServerAddr::SocketAddr(ref addr) => SysTcpStream::connect(*addr, opts).await?,
             ServerAddr::DomainName(ref domain, port) => {
@@ -57,7 +56,7 @@ impl TcpStream {
             }
         };
 
-        Ok(TcpStream(stream))
+        Ok(Self(stream))
     }
 
     /// Connects proxy remote target
@@ -65,7 +64,7 @@ impl TcpStream {
         context: &Context,
         addr: &Address,
         opts: &ConnectOpts,
-    ) -> io::Result<TcpStream> {
+    ) -> io::Result<Self> {
         let stream = match *addr {
             Address::SocketAddress(ref addr) => SysTcpStream::connect(*addr, opts).await?,
             Address::DomainNameAddress(ref domain, port) => {
@@ -76,7 +75,7 @@ impl TcpStream {
             }
         };
 
-        Ok(TcpStream(stream))
+        Ok(Self(stream))
     }
 
     /// Returns the local address that this stream is bound to.
@@ -129,7 +128,7 @@ pub struct TcpListener {
 
 impl TcpListener {
     /// Creates a new TcpListener, which will be bound to the specified address.
-    pub async fn bind_with_opts(addr: &SocketAddr, accept_opts: AcceptOpts) -> io::Result<TcpListener> {
+    pub async fn bind_with_opts(addr: &SocketAddr, accept_opts: AcceptOpts) -> io::Result<Self> {
         let socket = create_inbound_tcp_socket(addr, &accept_opts).await?;
 
         if let Some(size) = accept_opts.tcp.send_buffer_size {
@@ -167,18 +166,18 @@ impl TcpListener {
             set_tcp_fastopen(&inner)?;
         }
 
-        Ok(TcpListener { inner, accept_opts })
+        Ok(Self { inner, accept_opts })
     }
 
     /// Create a `TcpListener` from tokio's `TcpListener`
-    pub fn from_listener(listener: TokioTcpListener, accept_opts: AcceptOpts) -> io::Result<TcpListener> {
+    pub fn from_listener(listener: TokioTcpListener, accept_opts: AcceptOpts) -> io::Result<Self> {
         // Enable TFO if supported
         // macos requires TCP_FASTOPEN to be set after listen(), but other platform doesn't have this constraint
         if accept_opts.tcp.fastopen {
             set_tcp_fastopen(&listener)?;
         }
 
-        Ok(TcpListener {
+        Ok(Self {
             inner: listener,
             accept_opts,
         })
@@ -217,7 +216,7 @@ impl DerefMut for TcpListener {
 }
 
 impl From<TcpListener> for TokioTcpListener {
-    fn from(listener: TcpListener) -> TokioTcpListener {
+    fn from(listener: TcpListener) -> Self {
         listener.inner
     }
 }

@@ -6,7 +6,7 @@ use std::net::SocketAddr;
 pub use self::sys::uds::{UnixListener, UnixStream};
 pub use self::{
     option::{AcceptOpts, ConnectOpts, TcpSocketOpts, UdpSocketOpts},
-    sys::{get_ip_stack_capabilities, set_tcp_fastopen, socket_bind_dual_stack, IpStackCapabilities},
+    sys::{IpStackCapabilities, get_ip_stack_capabilities, set_tcp_fastopen, socket_bind_dual_stack},
     tcp::{TcpListener, TcpStream},
     udp::UdpSocket,
 };
@@ -26,19 +26,19 @@ pub enum AddrFamily {
 }
 
 impl From<&SocketAddr> for AddrFamily {
-    fn from(addr: &SocketAddr) -> AddrFamily {
+    fn from(addr: &SocketAddr) -> Self {
         match *addr {
-            SocketAddr::V4(..) => AddrFamily::Ipv4,
-            SocketAddr::V6(..) => AddrFamily::Ipv6,
+            SocketAddr::V4(..) => Self::Ipv4,
+            SocketAddr::V6(..) => Self::Ipv6,
         }
     }
 }
 
 impl From<SocketAddr> for AddrFamily {
-    fn from(addr: SocketAddr) -> AddrFamily {
+    fn from(addr: SocketAddr) -> Self {
         match addr {
-            SocketAddr::V4(..) => AddrFamily::Ipv4,
-            SocketAddr::V6(..) => AddrFamily::Ipv6,
+            SocketAddr::V4(..) => Self::Ipv4,
+            SocketAddr::V6(..) => Self::Ipv6,
         }
     }
 }

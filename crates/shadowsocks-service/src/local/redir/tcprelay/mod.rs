@@ -8,7 +8,7 @@ use std::{
 };
 
 use log::{debug, error, info, trace};
-use shadowsocks::{lookup_then, net::TcpListener as ShadowTcpListener, relay::socks5::Address, ServerAddr};
+use shadowsocks::{ServerAddr, lookup_then, net::TcpListener as ShadowTcpListener, relay::socks5::Address};
 use tokio::{
     net::{TcpListener, TcpStream},
     time,
@@ -86,7 +86,7 @@ impl RedirTcpServer {
         client_config: &ServerAddr,
         balancer: PingBalancer,
         redir_ty: RedirType,
-    ) -> io::Result<RedirTcpServer> {
+    ) -> io::Result<Self> {
         let listener = match *client_config {
             ServerAddr::SocketAddr(ref saddr) => {
                 TcpListener::bind_redir(redir_ty, *saddr, context.accept_opts()).await?
@@ -99,7 +99,7 @@ impl RedirTcpServer {
             }
         };
 
-        Ok(RedirTcpServer {
+        Ok(Self {
             context,
             listener,
             balancer,

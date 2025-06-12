@@ -9,12 +9,12 @@ use std::{
 
 use log::{debug, error, trace, warn};
 use shadowsocks::{
+    ServerAddr,
     config::Mode,
     relay::socks5::{
         self, Address, Command, Error as Socks5Error, HandshakeRequest, HandshakeResponse, PasswdAuthRequest,
         PasswdAuthResponse, Reply, TcpRequestHeader, TcpResponseHeader,
     },
-    ServerAddr,
 };
 use tokio::net::TcpStream;
 
@@ -44,8 +44,8 @@ impl Socks5TcpHandler {
         balancer: PingBalancer,
         mode: Mode,
         auth: Arc<Socks5AuthConfig>,
-    ) -> Socks5TcpHandler {
-        Socks5TcpHandler {
+    ) -> Self {
+        Self {
             context,
             udp_associate_addr,
             balancer,
@@ -90,8 +90,7 @@ impl Socks5TcpHandler {
 
         trace!("reply handshake {:?}", resp);
 
-        Err(Error::new(
-            ErrorKind::Other,
+        Err(Error::other(
             "currently shadowsocks-rust does not support authentication",
         ))
     }
@@ -101,7 +100,7 @@ impl Socks5TcpHandler {
 
         const PASSWORD_AUTH_STATUS_FAILURE: u8 = 255;
 
-        // Read initiation negociation
+        // Read initiation negotiation
 
         let req = match PasswdAuthRequest::read_from(stream).await {
             Ok(i) => i,
@@ -109,8 +108,7 @@ impl Socks5TcpHandler {
                 let rsp = PasswdAuthResponse::new(err.as_reply().as_u8());
                 let _ = rsp.write_to(stream).await;
 
-                return Err(Error::new(
-                    ErrorKind::Other,
+                return Err(Error::other(
                     format!("Username/Password Authentication Initial request failed: {err}"),
                 ));
             }
@@ -122,8 +120,7 @@ impl Socks5TcpHandler {
                 let rsp = PasswdAuthResponse::new(PASSWORD_AUTH_STATUS_FAILURE);
                 let _ = rsp.write_to(stream).await;
 
-                return Err(Error::new(
-                    ErrorKind::Other,
+                return Err(Error::other(
                     "Username/Password Authentication Initial request uname contains invalid characters",
                 ));
             }
@@ -135,8 +132,7 @@ impl Socks5TcpHandler {
                 let rsp = PasswdAuthResponse::new(PASSWORD_AUTH_STATUS_FAILURE);
                 let _ = rsp.write_to(stream).await;
 
-                return Err(Error::new(
-                    ErrorKind::Other,
+                return Err(Error::other(
                     "Username/Password Authentication Initial request passwd contains invalid characters",
                 ));
             }
@@ -145,8 +141,7 @@ impl Socks5TcpHandler {
         if self.auth.passwd.check_user(user_name, password) {
             trace!(
                 "socks5 authenticated with Username/Password method, user: {}, password: {}",
-                user_name,
-                password
+                user_name, password
             );
 
             let rsp = PasswdAuthResponse::new(0);
@@ -162,8 +157,7 @@ impl Socks5TcpHandler {
                 user_name, password
             );
 
-            Err(Error::new(
-                ErrorKind::Other,
+            Err(Error::other(
                 format!("Username/Password Authentication failed, user: {user_name}, password: {password}"),
             ))
         }

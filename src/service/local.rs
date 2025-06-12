@@ -10,7 +10,7 @@ use std::{
     time::{Duration, Instant},
 };
 
-use clap::{builder::PossibleValuesParser, Arg, ArgAction, ArgGroup, ArgMatches, Command, ValueHint};
+use clap::{Arg, ArgAction, ArgGroup, ArgMatches, Command, ValueHint, builder::PossibleValuesParser};
 use futures::future::{self, FutureExt};
 use log::{error, info, trace};
 use tokio::{
@@ -25,13 +25,13 @@ use shadowsocks_service::shadowsocks::relay::socks5::Address;
 use shadowsocks_service::{
     acl::AccessControl,
     config::{
-        read_variable_field_value, Config, ConfigType, LocalConfig, LocalInstanceConfig, ProtocolType,
-        ServerInstanceConfig,
+        Config, ConfigType, LocalConfig, LocalInstanceConfig, ProtocolType, ServerInstanceConfig,
+        read_variable_field_value,
     },
-    local::{loadbalancing::PingBalancer, Server},
+    local::{Server, loadbalancing::PingBalancer},
     shadowsocks::{
         config::{Mode, ServerAddr, ServerConfig, ServerSource},
-        crypto::{available_ciphers, CipherKind},
+        crypto::{CipherKind, available_ciphers},
         plugin::PluginConfig,
     },
 };
@@ -59,19 +59,19 @@ mod local_value_parser {
     impl FromStr for RemoteDnsAddress {
         type Err = AddressError;
 
-        fn from_str(a: &str) -> Result<RemoteDnsAddress, Self::Err> {
+        fn from_str(a: &str) -> Result<Self, Self::Err> {
             if let Ok(ip) = a.parse::<IpAddr>() {
-                return Ok(RemoteDnsAddress(Address::SocketAddress(SocketAddr::new(ip, 53))));
+                return Ok(Self(Address::SocketAddress(SocketAddr::new(ip, 53))));
             }
 
             if let Ok(saddr) = a.parse::<SocketAddr>() {
-                return Ok(RemoteDnsAddress(Address::SocketAddress(saddr)));
+                return Ok(Self(Address::SocketAddress(saddr)));
             }
 
             if a.find(':').is_some() {
                 a.parse::<Address>().map(RemoteDnsAddress)
             } else {
-                Ok(RemoteDnsAddress(Address::DomainNameAddress(a.to_owned(), 53)))
+                Ok(Self(Address::DomainNameAddress(a.to_owned(), 53)))
             }
         }
     }
@@ -570,6 +570,12 @@ pub fn define_command_line_options(mut app: Command) -> Command {
                     .action(ArgAction::Set)
                     .value_parser(clap::value_parser!(u64))
                     .help("SIP008 Online Configuration Delivery update interval in seconds, 3600 by default"),
+            )
+            .arg(
+                Arg::new("ONLINE_CONFIG_ALLOWED_PLUGIN")
+                    .long("online-config-allowed-plugin")
+                    .action(ArgAction::Append)
+                    .help("SIP008 Online Configuration Delivery allowed plugin list"),
             );
     }
 
@@ -577,7 +583,7 @@ pub fn define_command_line_options(mut app: Command) -> Command {
 }
 
 /// Create `Runtime` and `main` entry
-pub fn create(matches: &ArgMatches) -> ShadowsocksResult<(Runtime, impl Future<Output = ShadowsocksResult>)> {
+pub fn create(matches: &ArgMatches) -> ShadowsocksResult<(Runtime, impl Future<Output = ShadowsocksResult> + use<>)> {
     #[cfg_attr(not(feature = "local-online-config"), allow(unused_mut))]
     let (config, _, runtime) = {
         let config_path_opt = matches.get_one::<PathBuf>("CONFIG").cloned().or_else(|| {
@@ -930,17 +936,27 @@ pub fn create(matches: &ArgMatches) -> ShadowsocksResult<(Runtime, impl Future<O
             use shadowsocks_service::config::OnlineConfig;
 
             let online_config_update_interval = matches.get_one::<u64>("ONLINE_CONFIG_UPDATE_INTERVAL").cloned();
+
+            let mut allowed_plugins = None;
+            if let Some(plugins) = matches.get_many::<String>("ONLINE_CONFIG_ALLOWED_PLUGIN") {
+                allowed_plugins = Some(plugins.cloned().collect());
+            }
+
             config.online_config = Some(OnlineConfig {
                 config_url: online_config_url.clone(),
                 update_interval: online_config_update_interval.map(Duration::from_secs),
+                allowed_plugins,
             });
         }
 
         // DONE READING options
 
         if config.local.is_empty() {
-            return Err(ShadowsocksError::InsufficientParams("missing `local_address`, consider specifying it by --local-addr command line option, \
-                    or \"local_address\" and \"local_port\" in configuration file".to_string()));
+            return Err(ShadowsocksError::InsufficientParams(
+                "missing `local_address`, consider specifying it by --local-addr command line option, \
+                    or \"local_address\" and \"local_port\" in configuration file"
+                    .to_string(),
+            ));
         }
 
         config
@@ -1099,7 +1115,7 @@ impl ServerReloader {
     #[cfg(unix)]
     async fn launch_signal_reload_server_task(self: Arc<Self>) {
         use log::debug;
-        use tokio::signal::unix::{signal, SignalKind};
+        use tokio::signal::unix::{SignalKind, signal};
 
         let mut sigusr1 = signal(SignalKind::user_defined1()).expect("signal");
 

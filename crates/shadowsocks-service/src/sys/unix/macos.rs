@@ -4,7 +4,7 @@ use std::{ffi::CString, io, os::fd::RawFd, ptr};
 
 use log::error;
 
-extern "C" {
+unsafe extern "C" {
     /// https://developer.apple.com/documentation/xpc/1505523-launch_activate_socket
     fn launch_activate_socket(
         name: *const libc::c_char,
@@ -20,8 +20,7 @@ pub fn get_launch_activate_socket(name: &str) -> io::Result<RawFd> {
     let cname = match CString::new(name) {
         Ok(n) => n,
         Err(..) => {
-            return Err(io::Error::new(
-                io::ErrorKind::Other,
+            return Err(io::Error::other(
                 format!("activate socket name \"{}\" contains NUL bytes", name),
             ));
         }

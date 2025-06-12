@@ -10,11 +10,11 @@ use std::{
 use byteorder::{BigEndian, ByteOrder};
 use bytes::{BufMut, BytesMut};
 use hickory_resolver::proto::{
-    op::{response_code::ResponseCode, Message},
+    op::{Message, response_code::ResponseCode},
     serialize::binary::{BinEncodable, BinEncoder, EncodeMode},
 };
 use log::{error, trace};
-use shadowsocks::{lookup_then, net::TcpListener as ShadowTcpListener, ServerAddr};
+use shadowsocks::{ServerAddr, lookup_then, net::TcpListener as ShadowTcpListener};
 use tokio::{
     io::{AsyncReadExt, AsyncWriteExt},
     net::TcpStream,
@@ -37,7 +37,7 @@ impl FakeDnsTcpServer {
         context: Arc<ServiceContext>,
         client_config: &ServerAddr,
         manager: Arc<FakeDnsManager>,
-    ) -> io::Result<FakeDnsTcpServer> {
+    ) -> io::Result<Self> {
         let listener = match *client_config {
             ServerAddr::SocketAddr(ref saddr) => {
                 ShadowTcpListener::bind_with_opts(saddr, context.accept_opts()).await?
@@ -50,7 +50,7 @@ impl FakeDnsTcpServer {
             }
         };
 
-        Ok(FakeDnsTcpServer {
+        Ok(Self {
             context,
             listener,
             manager,
@@ -79,7 +79,7 @@ impl FakeDnsTcpServer {
             let context = self.context.clone();
             let manager = self.manager.clone();
             tokio::spawn(async move {
-                if let Err(err) = FakeDnsTcpServer::handle_client(context, peer_addr, stream, manager).await {
+                if let Err(err) = Self::handle_client(context, peer_addr, stream, manager).await {
                     error!(
                         "failed to handle Fake DNS tcp client, peer: {}, err: {}",
                         peer_addr, err

@@ -1,7 +1,7 @@
 use std::{io, net::SocketAddr, sync::Arc, time::Duration};
 
 use log::{error, info};
-use shadowsocks::{config::Mode, net::TcpListener as ShadowTcpListener, ServerAddr};
+use shadowsocks::{ServerAddr, config::Mode, net::TcpListener as ShadowTcpListener};
 use tokio::{net::TcpStream, time};
 
 #[cfg(feature = "local-http")]
@@ -34,8 +34,8 @@ impl SocksTcpServerBuilder {
         balancer: PingBalancer,
         mode: Mode,
         socks5_auth: Socks5AuthConfig,
-    ) -> SocksTcpServerBuilder {
-        SocksTcpServerBuilder {
+    ) -> Self {
+        Self {
             context,
             client_config,
             udp_associate_addr,
@@ -56,15 +56,17 @@ impl SocksTcpServerBuilder {
     pub async fn build(self) -> io::Result<SocksTcpServer> {
         cfg_if::cfg_if! {
             if #[cfg(target_os = "macos")] {
-                let listener = if let Some(launchd_socket_name) = self.launchd_socket_name {
-                    use tokio::net::TcpListener as TokioTcpListener;
-                    use crate::net::launch_activate_socket::get_launch_activate_tcp_listener;
+                let listener = match self.launchd_socket_name {
+                    Some(launchd_socket_name) => {
+                        use tokio::net::TcpListener as TokioTcpListener;
+                        use crate::net::launch_activate_socket::get_launch_activate_tcp_listener;
 
-                    let std_listener = get_launch_activate_tcp_listener(&launchd_socket_name, true)?;
-                    let tokio_listener = TokioTcpListener::from_std(std_listener)?;
-                    ShadowTcpListener::from_listener(tokio_listener, self.context.accept_opts())?
-                } else {
-                    create_standard_tcp_listener(&self.context, &self.client_config).await?
+                        let std_listener = get_launch_activate_tcp_listener(&launchd_socket_name, true)?;
+                        let tokio_listener = TokioTcpListener::from_std(std_listener)?;
+                        ShadowTcpListener::from_listener(tokio_listener, self.context.accept_opts())?
+                    } _ => {
+                        create_standard_tcp_listener(&self.context, &self.client_config).await?
+                    }
                 };
             } else {
                 let listener = create_standard_tcp_listener(&self.context, &self.client_config).await?;
@@ -178,7 +180,7 @@ impl SocksTcpHandler {
             0x04 => {
                 if self.socks5_auth.auth_required() {
                     error!("SOCKS4 disabled when authentication is configured");
-                    Err(io::Error::new(ErrorKind::Other, "SOCKS4 unsupported"))
+                    Err(io::Error::other("SOCKS4 unsupported"))
                 } else {
                     let handler = Socks4TcpHandler::new(self.context, self.balancer, self.mode);
                     handler.handle_socks4_client(self.stream, self.peer_addr).await
@@ -200,14 +202,14 @@ impl SocksTcpHandler {
             b'G' | b'g' | b'H' | b'h' | b'P' | b'p' | b'D' | b'd' | b'C' | b'c' | b'O' | b'o' | b'T' | b't' => {
                 if self.socks5_auth.auth_required() {
                     error!("HTTP disabled when authentication is configured");
-                    Err(io::Error::new(ErrorKind::Other, "HTTP unsupported"))
+                    Err(io::Error::other("HTTP unsupported"))
                 } else {
                     // GET, HEAD, POST, PUT, DELETE, CONNECT, OPTIONS, TRACE, PATCH
                     match self.http_handler.serve_connection(self.stream, self.peer_addr).await {
                         Ok(..) => Ok(()),
                         Err(err) => {
                             error!("HTTP connection {} handler failed with error: {}", self.peer_addr, err);
-                            Err(io::Error::new(ErrorKind::Other, err))
+                            Err(io::Error::other(err))
                         }
                     }
                 }
@@ -215,7 +217,7 @@ impl SocksTcpHandler {
 
             version => {
                 error!("unsupported socks version {:x}", version);
-                let err = io::Error::new(ErrorKind::Other, "unsupported socks version");
+                let err = io::Error::other("unsupported socks version");
                 Err(err)
             }
         }

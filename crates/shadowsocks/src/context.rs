@@ -33,8 +33,8 @@ pub type SharedContext = Arc<Context>;
 
 impl Context {
     /// Create a new `Context` for `Client` or `Server`
-    pub fn new(config_type: ServerType) -> Context {
-        Context {
+    pub fn new(config_type: ServerType) -> Self {
+        Self {
             replay_protector: ReplayProtector::new(config_type),
             replay_policy: ReplayAttackPolicy::Default,
             dns_resolver: Arc::new(DnsResolver::system_resolver()),
@@ -44,7 +44,7 @@ impl Context {
 
     /// Create a new `Context` shared
     pub fn new_shared(config_type: ServerType) -> SharedContext {
-        SharedContext::new(Context::new(config_type))
+        SharedContext::new(Self::new(config_type))
     }
 
     /// Check if nonce exist or not
@@ -111,7 +111,7 @@ impl Context {
             }
             ReplayAttackPolicy::Reject => {
                 if self.replay_protector.check_nonce_and_set(method, nonce) {
-                    let err = io::Error::new(io::ErrorKind::Other, "detected repeated nonce (iv/salt)");
+                    let err = io::Error::other("detected repeated nonce (iv/salt)");
                     Err(err)
                 } else {
                     Ok(())
@@ -133,7 +133,11 @@ impl Context {
     }
 
     /// Resolves DNS address to `SocketAddr`s
-    pub async fn dns_resolve<'a>(&self, addr: &'a str, port: u16) -> io::Result<impl Iterator<Item = SocketAddr> + 'a> {
+    pub async fn dns_resolve<'a>(
+        &self,
+        addr: &'a str,
+        port: u16,
+    ) -> io::Result<impl Iterator<Item = SocketAddr> + 'a + use<'a>> {
         self.dns_resolver.resolve(addr, port).await
     }
 
