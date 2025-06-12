@@ -71,6 +71,8 @@ basic = [
 full = [
     "logging",
     "hickory-dns",
+    "dns-over-h3",
+    "local-fake-dns",
     "dns-over-tls",
     "dns-over-https",
     "local",
@@ -90,16 +92,14 @@ full = [
     "stream-cipher",
     "aead-cipher",
     "aead-cipher-2022",
+    "security-replay-attack-detect",
 ]
 
 # Full features with extra (non-stable)
 full-extra = [
     "full",
-    "dns-over-h3",
-    "local-fake-dns",
     "aead-cipher-extra",
     "aead-cipher-2022-extra",
-    "security-replay-attack-detect",
 ]
 
 # Enable local server
