@@ -323,8 +323,8 @@ impl ParsingRules {
 ///
 /// Mode is the default ACL strategy for those addresses that are not in configuration file.
 ///
-/// - `BlackList` - Bypasses / Rejects all addresses except those in `[proxy_list]` or `[white_list]`
-/// - `WhiteList` - Proxies / Accepts all addresses except those in `[bypass_list]` or `[black_list]`
+/// - `WhiteList` - Bypasses / Rejects all addresses except those in `[proxy_list]` or `[white_list]`
+/// - `BlackList` - Proxies / Accepts all addresses except those in `[bypass_list]` or `[black_list]`
 ///
 /// ## Rules
 ///
@@ -543,7 +543,7 @@ impl AccessControl {
 
     /// Returns the ASCII representation a domain name,
     /// if conversion fails returns original string
-    fn convert_to_ascii(host: &str) -> Cow<str> {
+    fn convert_to_ascii(host: &str) -> Cow<'_, str> {
         idna::domain_to_ascii(host)
             .map(From::from)
             .unwrap_or_else(|_| host.into())

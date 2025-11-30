@@ -139,9 +139,7 @@ impl OnlineConfigService {
                 self.config_url,
                 rsp.status()
             );
-            return Err(io::Error::other(
-                format!("status: {}", rsp.status()),
-            ));
+            return Err(io::Error::other(format!("status: {}", rsp.status())));
         }
 
         // Content-Type: application/json; charset=utf-8
@@ -192,7 +190,7 @@ impl OnlineConfigService {
             Err(..) => return Err(io::Error::other("body contains non-utf8 bytes")),
         };
 
-        let online_config = match Config::load_from_str(&parsed_body, ConfigType::OnlineConfig) {
+        let online_config = match Config::load_from_json_str(&parsed_body, ConfigType::OnlineConfig) {
             Ok(c) => c,
             Err(err) => {
                 error!(
@@ -222,9 +220,7 @@ impl OnlineConfigService {
                             "server-loader task found not allowed plugin: {}, url: {}",
                             plugin.plugin, self.config_url
                         );
-                        return Err(io::Error::other(
-                            format!("not allowed plugin: {}", plugin.plugin),
-                        ));
+                        return Err(io::Error::other(format!("not allowed plugin: {}", plugin.plugin)));
                     }
                 }
             }
