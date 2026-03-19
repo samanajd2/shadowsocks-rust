@@ -516,7 +516,7 @@ where
         #[cfg(feature = "stream-cipher")]
         CipherKind::SS_TABLE => {
             // TABLE cipher doesn't need key derivation.
-            // Reference implemenation: shadowsocks-libev, shadowsocks (Python)
+            // Reference implementation: shadowsocks-libev, shadowsocks (Python)
             let enc_key = password.clone().into_bytes().into_boxed_slice();
             return Ok((password, enc_key, Vec::new()));
         }
@@ -695,20 +695,20 @@ impl ServerConfig {
 
     /// Get server's TCP external address
     pub fn tcp_external_addr(&self) -> &ServerAddr {
-        if let Some(plugin) = self.plugin() {
-            if plugin.plugin_mode.enable_tcp() {
-                return self.plugin_addr.as_ref().unwrap_or(&self.addr);
-            }
+        if let Some(plugin) = self.plugin()
+            && plugin.plugin_mode.enable_tcp()
+        {
+            return self.plugin_addr.as_ref().unwrap_or(&self.addr);
         }
         &self.addr
     }
 
     /// Get server's UDP external address
     pub fn udp_external_addr(&self) -> &ServerAddr {
-        if let Some(plugin) = self.plugin() {
-            if plugin.plugin_mode.enable_udp() {
-                return self.plugin_addr.as_ref().unwrap_or(&self.addr);
-            }
+        if let Some(plugin) = self.plugin()
+            && plugin.plugin_mode.enable_udp()
+        {
+            return self.plugin_addr.as_ref().unwrap_or(&self.addr);
         }
         &self.addr
     }

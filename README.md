@@ -11,7 +11,7 @@
 [![Release](https://img.shields.io/github/release/shadowsocks/shadowsocks-rust.svg)](https://github.com/shadowsocks/shadowsocks-rust/releases)
 [![shadowsocks-rust](https://img.shields.io/archlinux/v/extra/x86_64/shadowsocks-rust)](https://archlinux.org/packages/extra/x86_64/shadowsocks-rust/)
 [![aur shadowsocks-rust-git](https://img.shields.io/aur/version/shadowsocks-rust-git)](https://aur.archlinux.org/packages/shadowsocks-rust-git)
-[![NixOS](https://img.shields.io/badge/NixOS-shadowsocks--rust-blue?logo=nixos)](https://github.com/NixOS/nixpkgs/tree/master/pkgs/tools/networking/shadowsocks-rust)
+[![NixOS](https://img.shields.io/badge/NixOS-shadowsocks--rust-blue?logo=nixos)](https://github.com/NixOS/nixpkgs/blob/master/pkgs/by-name/sh/shadowsocks-rust/package.nix)
 [![snap shadowsocks-rust](https://snapcraft.io/shadowsocks-rust/badge.svg)](https://snapcraft.io/shadowsocks-rust)
 [![homebrew shadowsocks-rust](https://img.shields.io/homebrew/v/shadowsocks-rust)](https://formulae.brew.sh/formula/shadowsocks-rust#default)
 [![MacPorts shadowsocks-rust](https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fports.macports.org%2Fapi%2Fv1%2Fports%2Fshadowsocks-rust%2F&query=%24.version&label=macports)](https://ports.macports.org/port/shadowsocks-rust/)
@@ -614,7 +614,10 @@ Example configuration:
             "local_address": "127.0.0.1",
             "local_port": 3128,
             // OPTIONAL. macOS launchd activate socket
-            "launchd_tcp_socket_name": "TCPListener"
+            "launchd_tcp_socket_name": "TCPListener",
+            // OPTIONAL. Authentication configuration file
+            // Configuration file document could be found in the next section.
+            "http_auth_config_path": "/path/to/auth.json",
         },
         {
             // DNS local server (feature = "local-dns")
@@ -955,6 +958,24 @@ The configuration file is set by `socks5_auth_config_path` in `locals`.
 }
 ```
 
+### HTTP Authentication Configuration
+
+The configuration file is set by `http_auth_config_path` in `locals`.
+
+```jsonc
+{
+    // Basic Authentication (RFC9110)
+    "basic": {
+        "users": [
+            {
+                "user_name": "USERNAME in UTF-8",
+                "password": "PASSWORD in UTF-8"
+            }
+        ]
+    }
+}
+```
+
 ### Environment Variables
 
 - `SS_SERVER_PASSWORD`: A default password for servers that created from command line argument (`--server-addr`)
@@ -1005,17 +1026,17 @@ These Ciphers require `"password"` to be a Base64 string of key that have **exac
 
 - For local servers (`sslocal`, `ssredir`, ...)
   - Modes:
-    - `[bypass_all]` - ACL runs in `WhiteList` mode. Bypasses all addresses except those matched any rules.
-    - `[proxy_all]` - ACL runs in `BlackList` mode. Proxies all addresses except those matched any rules. (default)
+    - `[bypass_all]` - ACL runs in `WhiteList` mode. Bypasses all addresses except those matching any rules.
+    - `[proxy_all]` - ACL runs in `BlackList` mode. Proxies all addresses except those matching any rules. (default)
   - Rules:
     - `[bypass_list]` - Rules for connecting directly
     - `[proxy_list]` - Rules for connecting through proxies
 - For remote servers (`ssserver`)
   - Modes:
-    - `[reject_all]` - ACL runs in `WhiteList` mode. Rejects all clients except those matched any rules.
-    - `[accept_all]` - ACL runs in `BlackList` mode. Accepts all clients except those matched any rules. (default)
-    - `[outbound_block_all]` - Outbound ACL runs in `WhiteList` mode. Blockes all outbound addresses except those matched any rules.
-    - `[outbound_allow_all]` - Outbound ACL runs in `BlackList` mode. Allows all outbound addresses except those matched any rules. (default)
+    - `[reject_all]` - ACL runs in `WhiteList` mode. Rejects all clients except those matching any rules.
+    - `[accept_all]` - ACL runs in `BlackList` mode. Accepts all clients except those matching any rules. (default)
+    - `[outbound_block_all]` - Outbound ACL runs in `WhiteList` mode. Blocks all outbound addresses except those matching any rules.
+    - `[outbound_allow_all]` - Outbound ACL runs in `BlackList` mode. Allows all outbound addresses except those matching any rules. (default)
   - Rules:
     - `[white_list]` - Rules for accepted clients
     - `[black_list]` - Rules for rejected clients

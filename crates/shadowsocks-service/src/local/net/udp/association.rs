@@ -13,7 +13,7 @@ use bytes::Bytes;
 use futures::future;
 use log::{debug, error, trace, warn};
 use lru_time_cache::LruCache;
-use rand::{Rng, SeedableRng, rngs::SmallRng};
+use rand::{RngExt, rngs::SmallRng};
 use tokio::{sync::mpsc, task::JoinHandle, time};
 
 use shadowsocks::{
@@ -234,7 +234,7 @@ where
 }
 
 thread_local! {
-    static CLIENT_SESSION_RNG: RefCell<SmallRng> = RefCell::new(SmallRng::from_os_rng());
+    static CLIENT_SESSION_RNG: RefCell<SmallRng> = RefCell::new(rand::make_rng());
 }
 
 /// Generate an AEAD-2022 Client SessionID
@@ -515,11 +515,9 @@ where
             }
         };
 
-        if UDP_SOCKET_SUPPORT_DUAL_STACK {
-            if let SocketAddr::V4(saddr) = target_addr {
-                let mapped_ip = saddr.ip().to_ipv6_mapped();
-                target_addr = SocketAddr::V6(SocketAddrV6::new(mapped_ip, saddr.port(), 0, 0));
-            }
+        if UDP_SOCKET_SUPPORT_DUAL_STACK && let SocketAddr::V4(saddr) = target_addr {
+            let mapped_ip = saddr.ip().to_ipv6_mapped();
+            target_addr = SocketAddr::V6(SocketAddrV6::new(mapped_ip, saddr.port(), 0, 0));
         }
 
         let n = socket.send_to(data, target_addr).await?;
